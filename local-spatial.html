@@ -1,0 +1,284 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Calibrate image space, transform points, inspect detections, and render grids.">
+  <title>Local spatial API · SPE SDK Docs</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <header class="docs-topbar">
+    <a class="docs-brand" href="index.html" aria-label="SPE SDK docs home"><span class="docs-brand-mark">SPE</span><span><b>SDK Reference</b><small>Python · Spatial Intelligence Engine</small></span></a>
+    <div class="docs-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="docs-search" type="search" placeholder="Search this page…" aria-label="Search documentation"><kbd>/</kbd></div>
+    <a class="source-link" href="https://github.com/kgosietsileRM/spe_sdk" target="_blank" rel="noreferrer">Source <span>↗</span></a>
+  </header>
+  <div class="docs-layout">
+    <aside class="docs-sidebar"><div class="sidebar-label">DOCUMENTATION</div><nav aria-label="Documentation pages"><a class="nav-link" href="index.html"><span class="nav-icon">01</span><span>Overview</span></a>
+<a class="nav-link active" href="local-spatial.html"><span class="nav-icon">02</span><span>Local spatial API</span></a>
+<a class="nav-link" href="tracking-analytics.html"><span class="nav-icon">03</span><span>Tracking &amp; analytics</span></a>
+<a class="nav-link" href="http-clients.html"><span class="nav-icon">04</span><span>HTTP clients</span></a>
+<a class="nav-link" href="cli-development.html"><span class="nav-icon">05</span><span>CLI &amp; development</span></a></nav>
+      <div class="sidebar-bottom"><span>SDK VERSION</span><code>0.2.1</code><a href="index.md">Markdown reference ↗</a></div>
+    </aside>
+    <main class="docs-main">
+      <div class="docs-page-heading"><div class="breadcrumbs"><a href="index.html">Docs</a><span>/</span><span>Local spatial API</span></div><div class="page-heading-row"><div><p>Calibrate image space, transform points, inspect detections, and render grids.</p><h1>Local spatial API</h1></div><a class="edit-source" href="https://github.com/kgosietsileRM/spe_sdk/blob/main/docs/index.md" target="_blank" rel="noreferrer">Edit source ↗</a></div></div>
+      <div class="local-callout"><b>Runs in your process.</b> <code>SpatialEngine</code> does not contact or require a SPE server. For server routes and model-backed detection, see <a href="http-clients.html">HTTP clients</a>.</div>
+      <div class="docs-search-status" id="docs-search-status" hidden></div>
+      <div class="docs-reading-layout"><article class="docs-content" id="docs-content"><section class="manual-section" data-search="spatialengine"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="spatialengine">SpatialEngine</h1></header><div class="markdown-body"><p><code>spe.engine.SpatialEngine</code> is a stateful local facade bundling a calibration, a calibrated grid size, and optional source dimensions.</p>
+<pre><code class="language-python">from spe import SpatialEngine
+
+engine = SpatialEngine(
+    grid_rows=4,  # default 3
+    grid_columns=6,  # default 3
+    source_dimensions={&quot;width&quot;: 1280, &quot;height&quot;: 720},  # optional
+    calibration=None,  # optional pre-built Calibration or mapping
+)</code></pre>
+<h2 id="constructor">Constructor</h2>
+<pre><code class="language-python">SpatialEngine(
+    *,
+    calibration: Calibration | Mapping[str, Any] | None = None,
+    grid_rows: int = 3,
+    grid_columns: int = 3,
+    source_dimensions: Mapping[str, Any] | None = None,
+) -&gt; None</code></pre>
+<p>When <code>calibration</code> is supplied, its <code>rows</code>/<code>columns</code> override <code>grid_rows</code>/ <code>grid_columns</code>.</p>
+<p><strong>Attributes</strong></p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Attribute</th><th scope="col">Type</th><th scope="col">Description</th></tr></thead><tbody><tr><td><code>grid_rows</code></td><td><code>int</code></td><td>Calibrated grid row count.</td></tr><tr><td><code>grid_columns</code></td><td><code>int</code></td><td>Calibrated grid column count.</td></tr><tr><td><code>source_dimensions</code></td><td><code>dict | None</code></td><td><code>{&quot;width&quot;: ..., &quot;height&quot;: ...}</code>.</td></tr><tr><td><code>calibration</code></td><td><code>Calibration | None</code></td><td>The installed calibration, if any.</td></tr></tbody></table></div>
+<h2 id="state-methods">State methods</h2>
+<h3 id="calibrate"><code>calibrate</code></h3>
+<pre><code class="language-python">calibrate(
+    source_points: Sequence[Sequence[float]],
+    source_width: int,
+    source_height: int,
+    *,
+    reference_plane: ReferencePlane | None = None,
+    rows: int | None = None,
+    columns: int | None = None,
+) -&gt; Calibration</code></pre>
+<p>Validates four <code>TL, TR, BR, BL</code> points and installs a reusable calibration. <code>rows</code>/<code>columns</code> default to the engine&#x27;s current grid size. Updates <code>source_dimensions</code> and returns the new <code>Calibration</code>.</p>
+<p>Raises <code>SPEValidationError</code> for invalid geometry, or when the resolved grid rows or columns are not positive.</p>
+<h3 id="load_calibration"><code>load_calibration</code></h3>
+<pre><code class="language-python">load_calibration(data: Calibration | Mapping[str, Any]) -&gt; Calibration</code></pre>
+<p>Installs a previously serialized calibration and adopts its grid size.</p>
+<h3 id="clear_calibration"><code>clear_calibration</code></h3>
+<pre><code class="language-python">clear_calibration() -&gt; None</code></pre>
+<p>Removes the installed calibration.</p>
+<h3 id="is_calibrated-property"><code>is_calibrated</code> (property)</h3>
+<p><code>True</code> when a calibration with a homography is installed.</p>
+<h2 id="transform-methods">Transform methods</h2>
+<p>These require a calibration and raise <code>SPEEngineError</code> when the engine is not calibrated.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Method</th><th scope="col">Returns</th></tr></thead><tbody><tr><td><code>image_to_reference(points)</code></td><td><code>list[list[float]]</code> — image points in reference coordinates.</td></tr><tr><td><code>reference_to_image(points)</code></td><td><code>list[list[float]]</code> — reference points in image coordinates.</td></tr><tr><td><code>cell_for_reference_point(point)</code></td><td><code>GridCell | None</code>.</td></tr><tr><td><code>zone_for_reference_point(point)</code></td><td><code>str | None</code>.</td></tr><tr><td><code>cell_for_image_point(point)</code></td><td><code>GridCell | None</code>.</td></tr><tr><td><code>zone_for_image_point(point)</code></td><td><code>str | None</code>.</td></tr><tr><td><code>zones()</code></td><td><code>list[Zone]</code> for the configured grid.</td></tr></tbody></table></div>
+<h2 id="inspection">Inspection</h2>
+<h3 id="spatial_state"><code>spatial_state</code></h3>
+<pre><code class="language-python">spatial_state() -&gt; dict[str, Any]</code></pre>
+<p>Returns the canonical state contract consumed by <code>inspect_point</code>:</p>
+<pre><code class="language-python">{
+    &quot;calibration&quot;: {...},  # Calibration.to_dict()
+    &quot;grid&quot;: {&quot;rows&quot;: 4, &quot;columns&quot;: 6},
+    &quot;source_dimensions&quot;: {&quot;width&quot;: 1280, &quot;height&quot;: 720},  # when known
+}</code></pre>
+<h3 id="inspect"><code>inspect</code></h3>
+<pre><code class="language-python">inspect(image_point: Sequence[float]) -&gt; dict[str, Any]</code></pre>
+<p>Inspects one image-space point against the installed state. See <a href="#inspect_point"><code>inspect_point</code></a> for the returned shape.</p>
+<h2 id="spatialization">Spatialization</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Method</th><th scope="col">Description</th></tr></thead><tbody><tr><td><code>spatialize_detection(detection)</code></td><td>Enrich one detection mapping with spatial data.</td></tr><tr><td><code>spatialize_result(result)</code></td><td>Enrich a normalized <code>{&quot;detections&quot;: [...]}</code> result.</td></tr><tr><td><code>spatialize(detections)</code></td><td>Enrich a sequence of detection mappings, returning a list.</td></tr><tr><td><code>zone_polygons()</code></td><td>Map each zone id to its source-pixel quadrilateral.</td></tr><tr><td><code>detections_in_zone(detections, zone)</code></td><td>Return spatialized detections in one zone.</td></tr></tbody></table></div>
+<p>These require a calibration and raise <code>SPEEngineError</code> when uncalibrated. The per-detection payload matches <a href="#spatialize_detection"><code>spatialize_detection</code></a>.</p>
+<h2 id="rendering">Rendering</h2>
+<h3 id="render_grid"><code>render_grid</code></h3>
+<pre><code class="language-python">render_grid(
+    image: np.ndarray,
+    *,
+    rows: int = 8,
+    columns: int = 12,
+    line_thickness: int = 1,
+    line_color: tuple[int, int, int] = (91, 243, 168),
+    show_coordinates: bool = True,
+) -&gt; tuple[np.ndarray, dict]</code></pre>
+<p>Draws a regular image-space grid on a copy of <code>image</code>. This does not require a calibration. See <a href="#generate_grid"><code>generate_grid</code></a>.</p>
+<h3 id="render_calibrated_grid"><code>render_calibrated_grid</code></h3>
+<pre><code class="language-python">render_calibrated_grid(
+    image: np.ndarray,
+    *,
+    show_grid: bool = True,
+    show_roi: bool = True,
+    line_color: tuple[int, int, int] = (91, 243, 168),
+    roi_color: tuple[int, int, int] = (48, 59, 255),
+    overlay_only: bool = False,
+) -&gt; tuple[np.ndarray, dict]</code></pre>
+<p>Renders the calibrated grid, projected back into image space through the inverse homography. Requires a calibration (raises <code>SPEEngineError</code> otherwise). See <a href="#generate_calibrated_grid"><code>generate_calibrated_grid</code></a>.</p>
+<h2 id="persistence">Persistence</h2>
+<h3 id="to_dict"><code>to_dict</code></h3>
+<pre><code class="language-python">to_dict() -&gt; dict[str, Any]</code></pre>
+<pre><code class="language-python">{
+    &quot;grid_rows&quot;: 4,
+    &quot;grid_columns&quot;: 6,
+    &quot;source_dimensions&quot;: {&quot;width&quot;: 1280, &quot;height&quot;: 720},
+    &quot;calibration&quot;: {...} | None,
+}</code></pre>
+<h3 id="from_dict-classmethod"><code>from_dict</code> (classmethod)</h3>
+<pre><code class="language-python">SpatialEngine.from_dict(data: Mapping[str, Any]) -&gt; SpatialEngine</code></pre>
+<p>Restores an engine from <code>to_dict()</code> output.</p></div></section><section class="manual-section" data-search="value objects"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="value-objects">Value objects</h1></header><div class="markdown-body"><p>All value objects live in <code>spe.models</code> and round-trip through <code>to_dict()</code> / <code>from_dict()</code>.</p>
+<h2 id="boundingbox"><code>BoundingBox</code></h2>
+<p>Frozen dataclass; an axis-aligned box in source-pixel coordinates.</p>
+<pre><code class="language-python">BoundingBox(x: float, y: float, width: float, height: float)</code></pre>
+<p>Validation: <code>x</code>/<code>y</code> must be <code>&gt;= 0</code>; <code>width</code>/<code>height</code> must be <code>&gt; 0</code>.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Member</th><th scope="col">Type</th><th scope="col">Description</th></tr></thead><tbody><tr><td><code>x</code>, <code>y</code>, <code>width</code>, <code>height</code></td><td><code>float</code></td><td>Box geometry.</td></tr><tr><td><code>center</code> (property)</td><td><code>dict[str, float]</code></td><td><code>{&quot;x&quot;: ..., &quot;y&quot;: ...}</code> box center.</td></tr><tr><td><code>foot_point</code> (property)</td><td><code>dict[str, float]</code></td><td>Bottom-center <code>{&quot;x&quot;: ..., &quot;y&quot;: ...}</code>.</td></tr><tr><td><code>area</code>, <code>x2</code>, <code>y2</code> (properties)</td><td><code>float</code></td><td>Area and right/bottom edges.</td></tr><tr><td><code>as_xyxy()</code></td><td><code>tuple[float, float, float, float]</code></td><td><code>(x1, y1, x2, y2)</code> bounds.</td></tr><tr><td><code>from_xyxy(x1, y1, x2, y2)</code></td><td><code>BoundingBox</code></td><td>Classmethod; builds from corners.</td></tr><tr><td><code>intersection(other)</code></td><td><code>BoundingBox | None</code></td><td>Overlapping box, or <code>None</code>.</td></tr><tr><td><code>iou(other)</code></td><td><code>float</code></td><td>Intersection-over-union in <code>[0, 1]</code>.</td></tr><tr><td><code>union(other)</code></td><td><code>BoundingBox</code></td><td>Smallest enclosing box.</td></tr><tr><td><code>contains(point, *, strict=False)</code></td><td><code>bool</code></td><td>Point-in-box test; accepts a mapping or <code>(x, y)</code>.</td></tr><tr><td><code>translate(dx, dy)</code></td><td><code>BoundingBox</code></td><td>Shifted copy.</td></tr><tr><td><code>scale(factor)</code></td><td><code>BoundingBox</code></td><td>Copy scaled about its center.</td></tr><tr><td><code>to_dict()</code></td><td><code>dict</code></td><td><code>{&quot;x&quot;, &quot;y&quot;, &quot;width&quot;, &quot;height&quot;}</code>.</td></tr><tr><td><code>from_dict(data)</code></td><td><code>BoundingBox</code></td><td>Classmethod.</td></tr></tbody></table></div>
+<h2 id="detection"><code>Detection</code></h2>
+<p>Frozen dataclass; a single perception observation in source pixels.</p>
+<pre><code class="language-python">Detection(
+    class_name: str,
+    bbox: BoundingBox,
+    confidence: float = 0.0,
+    id: str | None = None,
+    class_id: int | None = None,
+    track_id: str | None = None,
+    coordinate_system: str = &quot;source_pixels&quot;,
+)</code></pre>
+<p>Validation: <code>class_name</code> must be non-empty; <code>confidence</code> must be within <code>[0, 1]</code>; <code>coordinate_system</code> must be <code>&quot;source_pixels&quot;</code>.</p>
+<p><code>to_dict()</code> returns <code>class_name</code>, <code>confidence</code>, <code>bbox</code>, <code>center</code>, <code>foot_point</code>, <code>coordinate_system</code>, and (when set) <code>id</code>, <code>class_id</code>, <code>track_id</code>. <code>from_dict</code> accepts <code>class_name</code> or a <code>label</code> fallback.</p>
+<h2 id="referenceplane"><code>ReferencePlane</code></h2>
+<p>Dataclass; the calibration target plane.</p>
+<pre><code class="language-python">ReferencePlane(width: float = 1000, height: float = 600, units: str = &quot;normalized&quot;)</code></pre>
+<p><code>from_dict(None)</code> yields the defaults.</p>
+<h2 id="gridcell"><code>GridCell</code></h2>
+<p>Frozen dataclass.</p>
+<pre><code class="language-python">GridCell(row: int, column: int)</code></pre>
+<p><code>coordinate</code> (property) returns <code>[column, row]</code>. <code>to_dict()</code> returns <code>{&quot;row&quot;, &quot;column&quot;, &quot;coordinate&quot;}</code>.</p>
+<h2 id="zone"><code>Zone</code></h2>
+<p>Frozen dataclass.</p>
+<pre><code class="language-python">Zone(id: str, row: int, column: int)</code></pre>
+<p><code>to_dict()</code> returns <code>{&quot;id&quot;, &quot;row&quot;, &quot;column&quot;}</code>.</p>
+<h2 id="calibration"><code>Calibration</code></h2>
+<p>Dataclass; a four-point planar calibration and its reusable transforms.</p>
+<p><strong>Fields</strong></p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Field</th><th scope="col">Type</th><th scope="col">Default</th></tr></thead><tbody><tr><td><code>source_points</code></td><td><code>list[list[float]]</code></td><td>—</td></tr><tr><td><code>homography</code></td><td><code>list[list[float]] | None</code></td><td>—</td></tr><tr><td><code>inverse_homography</code></td><td><code>list[list[float]] | None</code></td><td>—</td></tr><tr><td><code>reference_plane</code></td><td><code>ReferencePlane</code></td><td><code>ReferencePlane()</code></td></tr><tr><td><code>rows</code></td><td><code>int</code></td><td><code>3</code></td></tr><tr><td><code>columns</code></td><td><code>int</code></td><td><code>3</code></td></tr><tr><td><code>status</code></td><td><code>str</code></td><td><code>&quot;calibrated&quot;</code></td></tr><tr><td><code>method</code></td><td><code>str</code></td><td><code>&quot;manual_four_point&quot;</code></td></tr><tr><td><code>coordinate_system</code></td><td><code>str</code></td><td><code>&quot;calibrated_reference_plane&quot;</code></td></tr><tr><td><code>point_order</code></td><td><code>Sequence[str]</code></td><td><code>POINT_ORDER</code></td></tr><tr><td><code>destination_points</code></td><td><code>list[list[float]]</code></td><td><code>[]</code></td></tr><tr><td><code>reprojection_error</code></td><td><code>float</code></td><td><code>0.0</code></td></tr><tr><td><code>source_roi</code></td><td><code>dict</code></td><td><code>{}</code></td></tr><tr><td><code>inlier_mask</code></td><td><code>list[int]</code></td><td><code>[]</code></td></tr><tr><td><code>transformation</code></td><td><code>dict</code></td><td><code>{}</code></td></tr></tbody></table></div>
+<p><strong>Constructors</strong></p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Method</th><th scope="col">Description</th></tr></thead><tbody><tr><td><code>Calibration.from_points(source_points, source_width, source_height, reference_plane=None, rows=3, columns=3)</code></td><td>Compute a calibration from four points.</td></tr><tr><td><code>Calibration.from_record(record, rows=None, columns=None)</code></td><td>Build from a <code>calculate_calibration</code> record.</td></tr><tr><td><code>Calibration.from_dict(data)</code></td><td>Alias of <code>from_record</code>.</td></tr></tbody></table></div>
+<p><strong>Serialization and transforms</strong></p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Method</th><th scope="col">Description</th></tr></thead><tbody><tr><td><code>to_dict(*, include_grid=True)</code></td><td>Serialize; <code>include_grid=False</code> omits <code>calibrated_grid</code>.</td></tr><tr><td><code>require_homography()</code></td><td>Return the image→reference matrix or raise <code>SPEValidationError</code>.</td></tr><tr><td><code>require_inverse_homography()</code></td><td>Return the reference→image matrix or raise.</td></tr><tr><td><code>image_to_reference(points)</code></td><td>Transform image points to reference coordinates.</td></tr><tr><td><code>reference_to_image(points)</code></td><td>Transform reference points to image coordinates.</td></tr><tr><td><code>cell_for(reference_point)</code></td><td><code>GridCell | None</code>.</td></tr><tr><td><code>zone_for(reference_point)</code></td><td><code>str | None</code>.</td></tr></tbody></table></div></div></section><section class="manual-section" data-search="geometry reference"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="geometry-reference">Geometry reference</h1></header><div class="markdown-body"><p><code>spe.geometry</code>. Constants:</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Name</th><th scope="col">Value</th></tr></thead><tbody><tr><td><code>REFERENCE_WIDTH</code></td><td><code>1000</code></td></tr><tr><td><code>REFERENCE_HEIGHT</code></td><td><code>600</code></td></tr><tr><td><code>POINT_ORDER</code></td><td><code>(&quot;top_left&quot;, &quot;top_right&quot;, &quot;bottom_right&quot;, &quot;bottom_left&quot;)</code></td></tr></tbody></table></div>
+<h2 id="calculate_calibration"><code>calculate_calibration</code></h2>
+<pre><code class="language-python">calculate_calibration(
+    points, width, height,
+    reference_width=REFERENCE_WIDTH,
+    reference_height=REFERENCE_HEIGHT,
+    units=&quot;normalized&quot;,
+) -&gt; dict</code></pre>
+<p>Validates four <code>TL, TR, BR, BL</code> points and returns a calibration record:</p>
+<pre><code class="language-python">{
+    &quot;status&quot;: &quot;calibrated&quot;,
+    &quot;method&quot;: &quot;manual_four_point&quot;,
+    &quot;coordinate_system&quot;: &quot;calibrated_reference_plane&quot;,
+    &quot;point_order&quot;: [&quot;top_left&quot;, &quot;top_right&quot;, &quot;bottom_right&quot;, &quot;bottom_left&quot;],
+    &quot;source_points&quot;: [[x, y], ...],
+    &quot;destination_points&quot;: [[x, y], ...],
+    &quot;reference_plane&quot;: {&quot;width&quot;: ..., &quot;height&quot;: ..., &quot;units&quot;: ...},
+    &quot;roi&quot;: {&quot;status&quot;: &quot;active&quot;, &quot;type&quot;: &quot;calibrated_planar_region&quot;},
+    &quot;homography&quot;: [[...], [...], [...]],
+    &quot;inverse_homography&quot;: [[...], [...], [...]],
+    &quot;reprojection_error&quot;: 0.0,
+    &quot;source_roi&quot;: {&quot;area_px&quot;: ..., &quot;area_percent&quot;: ...},
+    &quot;transformation&quot;: {&quot;direction&quot;: &quot;image_to_calibrated_reference_plane&quot;, &quot;reusable&quot;: True},
+    &quot;inlier_mask&quot;: [...],
+}</code></pre>
+<p>Raises <code>SPEValidationError</code> for invalid points, source dimensions, reference dimensions, or units.</p>
+<h2 id="calculate_homography"><code>calculate_homography</code></h2>
+<pre><code class="language-python">calculate_homography(source_points, destination_points) -&gt; tuple[np.ndarray, np.ndarray]</code></pre>
+<p>Returns the <code>3 x 3</code> matrix and the per-point inlier mask (both NumPy arrays). Requires exactly four points per side.</p>
+<h2 id="validate_homography"><code>validate_homography</code></h2>
+<pre><code class="language-python">validate_homography(homography) -&gt; np.ndarray</code></pre>
+<p>Returns a finite, invertible <code>3 x 3</code> matrix as <code>float64</code>, else raises <code>SPEValidationError</code>.</p>
+<h2 id="transform_points"><code>transform_points</code></h2>
+<pre><code class="language-python">transform_points(points, homography) -&gt; list[list[float]]</code></pre>
+<p>Transforms one point or many through <code>homography</code>. Non-finite results raise <code>SPEValidationError</code>.</p>
+<h2 id="inverse_homography"><code>inverse_homography</code></h2>
+<pre><code class="language-python">inverse_homography(homography) -&gt; np.ndarray</code></pre>
+<p>Returns the inverse matrix normalized so that its <code>[2, 2]</code> element is <code>1</code>.</p>
+<h2 id="reprojection_error"><code>reprojection_error</code></h2>
+<pre><code class="language-python">reprojection_error(source_points, destination_points, homography) -&gt; float</code></pre>
+<p>Mean Euclidean destination-space error of the transformed source points.</p>
+<h2 id="warp_image"><code>warp_image</code></h2>
+<pre><code class="language-python">warp_image(image: np.ndarray, homography, width: int, height: int) -&gt; np.ndarray</code></pre>
+<p>Warps an image into the reference plane using <code>INTER_LINEAR</code>. Requires a non-empty image and integer dimensions <code>&gt; 1</code>.</p>
+<h2 id="validate_source_points"><code>validate_source_points</code></h2>
+<pre><code class="language-python">validate_source_points(points, width, height) -&gt; np.ndarray</code></pre>
+<p>Validates <code>TL, TR, BR, BL</code> points against <code>width x height</code> (inside-frame, non-duplicate, convex, non-degenerate) and returns <code>float32</code> coordinates.</p></div></section><section class="manual-section" data-search="spatial reference"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="spatial-reference">Spatial reference</h1></header><div class="markdown-body"><p><code>spe.spatial</code>.</p>
+<h2 id="point_in_roi"><code>point_in_roi</code></h2>
+<pre><code class="language-python">point_in_roi(image_point, source_points) -&gt; bool</code></pre>
+<p><code>True</code> when the point is inside or on the four-point ROI.</p>
+<h2 id="image_to_spatial"><code>image_to_spatial</code></h2>
+<pre><code class="language-python">image_to_spatial(image_point, calibration) -&gt; dict</code></pre>
+<p>Maps one image point through an existing calibration record:</p>
+<pre><code class="language-python">{
+    &quot;x&quot;: ...,
+    &quot;y&quot;: ...,
+    &quot;coordinate_system&quot;: &quot;calibrated_reference_plane&quot;,
+    &quot;units&quot;: &quot;normalized&quot;,
+    &quot;width&quot;: ...,
+    &quot;height&quot;: ...,
+}</code></pre>
+<h2 id="spatial_point_to_grid_cell"><code>spatial_point_to_grid_cell</code></h2>
+<pre><code class="language-python">spatial_point_to_grid_cell(spatial_point, rows, columns, width, height) -&gt; dict | None</code></pre>
+<p>Returns <code>{&quot;row&quot;: ..., &quot;column&quot;: ..., &quot;coordinate&quot;: [column, row]}</code> or <code>None</code> when the point lies outside the plane. Boundary points clamp to the edge cell.</p>
+<h2 id="inspect_point"><code>inspect_point</code></h2>
+<pre><code class="language-python">inspect_point(image_point, spatial_state) -&gt; dict</code></pre>
+<p>Inspects a point using the canonical state contract produced by <code>SpatialEngine.spatial_state()</code>.</p>
+<ul><li>Invalid input returns status <code>&quot;invalid&quot;</code> with a <code>reason</code> of <code>&quot;point_outside_image&quot;</code> or <code>&quot;calibration_unavailable&quot;</code>.</li><li>A point outside the ROI returns status <code>&quot;outside_roi&quot;</code> with <code>image</code>, <code>roi</code>, <code>reference: None</code>, <code>physical</code>, and <code>grid_cell: None</code>.</li><li>A valid point returns status <code>&quot;valid&quot;</code> and adds <code>reference</code>, <code>grid_cell</code>, and (only when the units are not <code>normalized</code>) a populated <code>physical</code> block.</li></ul>
+<h2 id="spatialize_detection"><code>spatialize_detection</code></h2>
+<pre><code class="language-python">spatialize_detection(detection, calibration, roi=None, grid=None) -&gt; dict</code></pre>
+<p>Adds calibrated spatial data to one detection mapping without mutating its source-pixel fields. The ground point is the bottom-center (<code>foot_point</code>) of the bounding box. Returns:</p>
+<pre><code class="language-python">{
+    &quot;status&quot;: &quot;valid&quot; | &quot;outside_roi&quot; | &quot;unavailable&quot;,
+    &quot;ground_point&quot;: {&quot;x&quot;, &quot;y&quot;, &quot;coordinate_system&quot;: &quot;source_pixels&quot;, &quot;units&quot;: &quot;px&quot;},
+    &quot;position&quot;: {&quot;x&quot;, &quot;y&quot;, &quot;coordinate_system&quot;, &quot;units&quot;} | None,
+    &quot;grid_cell&quot;: {&quot;row&quot;, &quot;column&quot;, &quot;coordinate&quot;} | None,
+    &quot;zone&quot;: &quot;C4&quot; | None,
+    &quot;in_roi&quot;: bool | None,
+    &quot;coordinate_system&quot;: &quot;calibrated_reference_plane&quot;,
+    &quot;units&quot;: str | None,
+    &quot;reason&quot;: &quot;invalid_bbox&quot; | &quot;calibration_unavailable&quot; | &quot;roi_unavailable&quot; | &quot;invalid_roi&quot; | &quot;spatialization_error&quot;,
+}</code></pre>
+<p><code>reason</code> is present only on unavailable results.</p>
+<h2 id="spatialize_detection_result"><code>spatialize_detection_result</code></h2>
+<pre><code class="language-python">spatialize_detection_result(result, calibration, roi=None, grid=None) -&gt; dict</code></pre>
+<p>Returns a copy of <code>result</code> with each entry in <code>detections</code> enriched under a <code>&quot;spatial&quot;</code> key.</p>
+<p>Two aliases are defined in the module: <code>is_point_in_spatial_roi</code> (= <code>point_in_roi</code>) and <code>point_to_grid_cell</code> (= <code>spatial_point_to_grid_cell</code>).</p></div></section><section class="manual-section" data-search="grid reference"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="grid-reference">Grid reference</h1></header><div class="markdown-body"><p><code>spe.grid</code>.</p>
+<h2 id="gridconfig"><code>GridConfig</code></h2>
+<p>Frozen dataclass configuring an image-space grid.</p>
+<pre><code class="language-python">GridConfig(
+    rows: int = 8,
+    columns: int = 12,
+    line_thickness: int = 1,        # must be 1..12
+    show_coordinates: bool = True,
+    line_color: tuple[int, int, int] = (91, 243, 168),  # 0..255 each
+)</code></pre>
+<h2 id="generate_grid"><code>generate_grid</code></h2>
+<pre><code class="language-python">generate_grid(image: np.ndarray, config: GridConfig | None = None) -&gt; tuple[np.ndarray, dict]</code></pre>
+<p>Draws a regular grid on a copy of <code>image</code>. The metadata dict reports the source size, grid geometry, <code>coordinate_system: &quot;image&quot;</code>, and <code>status: &quot;grid generated&quot;</code>.</p>
+<h2 id="generate_calibrated_grid"><code>generate_calibrated_grid</code></h2>
+<pre><code class="language-python">generate_calibrated_grid(
+    image, homography,
+    rows=4, columns=6,
+    reference_width=1000, reference_height=600,
+    source_points=None,
+    show_grid=True, show_roi=True,
+    line_color=(91, 243, 168), roi_color=(48, 59, 255),
+    overlay_only=False,
+) -&gt; tuple[np.ndarray, dict]</code></pre>
+<p>Projects reference-plane grid lines back into image space through the inverse homography. When <code>overlay_only</code> is <code>True</code>, the returned image is a 4-channel transparent overlay. Metadata reports the grid geometry, <code>show_grid</code>/<code>show_roi</code>/ <code>overlay_only</code>, the source size, <code>coordinate_system: &quot;calibrated_reference_plane&quot;</code>, and <code>status: &quot;calibrated grid generated&quot;</code>.</p></div></section><section class="manual-section" data-search="zones reference"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="zones-reference">Zones reference</h1></header><div class="markdown-body"><p><code>spe.zones</code>.</p>
+<h2 id="row_label"><code>row_label</code></h2>
+<pre><code class="language-python">row_label(index: int) -&gt; str</code></pre>
+<p>Spreadsheet-style row label: <code>A..Z, AA, AB, ...</code>. Rejects negative or non-integer input with <code>SPEValidationError</code>.</p>
+<h2 id="generate_zones"><code>generate_zones</code></h2>
+<pre><code class="language-python">generate_zones(rows: int, columns: int) -&gt; list[dict]</code></pre>
+<p>Returns every zone in row-major order, each <code>{&quot;id&quot;, &quot;row&quot;, &quot;column&quot;}</code>.</p>
+<h2 id="zone_for_cell"><code>zone_for_cell</code></h2>
+<pre><code class="language-python">zone_for_cell(cell: dict | None, rows: int, columns: int) -&gt; str | None</code></pre>
+<p>Returns the zone id for a grid-cell dict, or <code>None</code> when unknown.</p></div></section></article><nav class="page-outline" id="page-outline" aria-label="On this page"><p>ON THIS PAGE</p></nav></div>
+      <footer class="docs-footer"><span>Spatial Intelligence Engine · Python SDK</span><span>Local core · HTTP clients · Temporal analytics</span></footer>
+    </main>
+  </div>
+  <script src="site.js" defer></script>
+</body>
+</html>

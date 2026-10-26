@@ -1,0 +1,148 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Connect synchronous and asynchronous Python applications to a SPE server.">
+  <title>HTTP clients &amp; transports · SPE SDK Docs</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <header class="docs-topbar">
+    <a class="docs-brand" href="index.html" aria-label="SPE SDK docs home"><span class="docs-brand-mark">SPE</span><span><b>SDK Reference</b><small>Python · Spatial Intelligence Engine</small></span></a>
+    <div class="docs-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="docs-search" type="search" placeholder="Search this page…" aria-label="Search documentation"><kbd>/</kbd></div>
+    <a class="source-link" href="https://github.com/kgosietsileRM/spe_sdk" target="_blank" rel="noreferrer">Source <span>↗</span></a>
+  </header>
+  <div class="docs-layout">
+    <aside class="docs-sidebar"><div class="sidebar-label">DOCUMENTATION</div><nav aria-label="Documentation pages"><a class="nav-link" href="index.html"><span class="nav-icon">01</span><span>Overview</span></a>
+<a class="nav-link" href="local-spatial.html"><span class="nav-icon">02</span><span>Local spatial API</span></a>
+<a class="nav-link" href="tracking-analytics.html"><span class="nav-icon">03</span><span>Tracking &amp; analytics</span></a>
+<a class="nav-link active" href="http-clients.html"><span class="nav-icon">04</span><span>HTTP clients</span></a>
+<a class="nav-link" href="cli-development.html"><span class="nav-icon">05</span><span>CLI &amp; development</span></a></nav>
+      <div class="sidebar-bottom"><span>SDK VERSION</span><code>0.2.1</code><a href="index.md">Markdown reference ↗</a></div>
+    </aside>
+    <main class="docs-main">
+      <div class="docs-page-heading"><div class="breadcrumbs"><a href="index.html">Docs</a><span>/</span><span>HTTP clients</span></div><div class="page-heading-row"><div><p>Connect synchronous and asynchronous Python applications to a SPE server.</p><h1>HTTP clients &amp; transports</h1></div><a class="edit-source" href="https://github.com/kgosietsileRM/spe_sdk/blob/main/docs/index.md" target="_blank" rel="noreferrer">Edit source ↗</a></div></div>
+      <div class="remote-callout"><b>This is a remote client.</b> <code>SPEClient</code> sends requests to the running engine at <code>base_url</code>; it does not launch or bundle that service. The <code>[http]</code> extra only adds <code>httpx</code> as a transport option.</div>
+      <div class="docs-search-status" id="docs-search-status" hidden></div>
+      <div class="docs-reading-layout"><article class="docs-content" id="docs-content"><section class="manual-section" data-search="speclient"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="speclient">SPEClient</h1></header><div class="markdown-body"><p><code>spe.client.SPEClient</code> is a thin, typed client for a running SPE engine server. It is a context manager.</p>
+<pre><code class="language-python">from spe import SPEClient
+
+with SPEClient(&quot;http://127.0.0.1:5000&quot;) as client:
+    client.health()</code></pre>
+<h2 id="constructor">Constructor</h2>
+<pre><code class="language-python">SPEClient(
+    base_url: str = &quot;http://127.0.0.1:5000&quot;,
+    *,
+    timeout: float = 30.0,
+    retries: int = 2,
+    backoff: float = 0.5,
+    user_agent: str | None = None,
+    transport: Transport | None = None,
+) -&gt; None</code></pre>
+<div class="table-wrap"><table><thead><tr><th scope="col">Argument</th><th scope="col">Description</th></tr></thead><tbody><tr><td><code>base_url</code></td><td>Root URL of the server; must be a non-empty string.</td></tr><tr><td><code>timeout</code></td><td>Per-request timeout in seconds.</td></tr><tr><td><code>retries</code></td><td>Automatic retries for idempotent requests on connection loss.</td></tr><tr><td><code>backoff</code></td><td>Base backoff delay (seconds); doubles each retry.</td></tr><tr><td><code>user_agent</code></td><td>Optional <code>User-Agent</code> header.</td></tr><tr><td><code>transport</code></td><td>Custom <code>Transport</code>; defaults to the best available backend.</td></tr></tbody></table></div>
+<p>Raises <code>SPEValidationError</code> when <code>base_url</code> is empty or not a string.</p>
+<h2 id="lifecycle">Lifecycle</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Member</th><th scope="col">Description</th></tr></thead><tbody><tr><td><code>base_url</code></td><td>Normalized base URL (no trailing slash).</td></tr><tr><td><code>__enter__</code> / <code>__exit__</code></td><td>Context-manager protocol.</td></tr><tr><td><code>close()</code></td><td>Release transport resources.</td></tr><tr><td><code>SPEClient.from_env(variable=&quot;SPE_API_URL&quot;, **kwargs)</code></td><td>Build from an environment variable.</td></tr></tbody></table></div>
+<h2 id="health-and-state">Health and state</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Method</th><th scope="col">Route</th><th scope="col">Returns</th></tr></thead><tbody><tr><td><code>health()</code></td><td><code>GET /health</code></td><td>Raw payload.</td></tr><tr><td><code>get_state()</code></td><td><code>GET /api/state</code></td><td>Raw payload.</td></tr></tbody></table></div>
+<h2 id="sources">Sources</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Method</th><th scope="col">Route</th><th scope="col">Returns</th></tr></thead><tbody><tr><td><code>create_source(source, *, filename=None, source_type=&quot;image&quot;, mime_type=None)</code></td><td><code>POST /api/sources</code></td><td><code>response[&quot;source&quot;]</code>.</td></tr><tr><td><code>get_source(source_id)</code></td><td><code>GET /api/sources/{id}</code></td><td><code>response[&quot;source&quot;]</code>.</td></tr><tr><td><code>delete_source(source_id)</code></td><td><code>DELETE /api/sources/{id}</code></td><td><code>None</code>.</td></tr><tr><td><code>source_media_url(source_id)</code></td><td>—</td><td>Absolute media URL string.</td></tr><tr><td><code>get_source_media(source_id)</code></td><td><code>GET /api/sources/{id}/media</code></td><td>Raw <code>bytes</code>.</td></tr></tbody></table></div>
+<p><code>source</code> may be <code>bytes</code>, <code>bytearray</code>, <code>memoryview</code>, <code>str</code>/<code>os.PathLike</code> path, or a binary file object.</p>
+<h2 id="calibration">Calibration</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Method</th><th scope="col">Route</th></tr></thead><tbody><tr><td><code>calibrate(source_points, source_width, source_height, *, reference_width=1000, reference_height=600, units=&quot;normalized&quot;, rows=3, columns=3)</code></td><td><code>POST /api/calibration</code></td></tr><tr><td><code>get_calibration()</code></td><td><code>GET /api/calibration</code> → <code>response[&quot;calibration&quot;]</code></td></tr><tr><td><code>update_calibration(...)</code> (same signature as <code>calibrate</code>)</td><td><code>PUT /api/calibration</code></td></tr><tr><td><code>delete_calibration()</code></td><td><code>DELETE /api/calibration</code></td></tr></tbody></table></div>
+<h2 id="roi-and-grid">ROI and grid</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Method</th><th scope="col">Route</th><th scope="col">Returns</th></tr></thead><tbody><tr><td><code>get_roi()</code></td><td><code>GET /api/roi</code></td><td><code>response[&quot;roi&quot;]</code>.</td></tr><tr><td><code>create_roi(points)</code></td><td><code>POST /api/roi</code></td><td><code>response[&quot;roi&quot;]</code>.</td></tr><tr><td><code>update_roi(points)</code></td><td><code>PUT /api/roi</code></td><td><code>response[&quot;roi&quot;]</code>.</td></tr><tr><td><code>delete_roi()</code></td><td><code>DELETE /api/roi</code></td><td><code>None</code>.</td></tr><tr><td><code>get_grid()</code></td><td><code>GET /api/grid</code></td><td><code>response[&quot;grid&quot;]</code>.</td></tr><tr><td><code>set_grid(rows, columns)</code></td><td><code>PUT /api/grid</code></td><td><code>response[&quot;grid&quot;]</code>.</td></tr><tr><td><code>delete_grid()</code></td><td><code>DELETE /api/grid</code></td><td><code>None</code>.</td></tr></tbody></table></div>
+<h2 id="spatial-queries">Spatial queries</h2>
+<h3 id="transform_points"><code>transform_points</code></h3>
+<pre><code class="language-python">transform_points(
+    points,
+    *,
+    homography=None,
+    calibration=None,
+    direction=&quot;image_to_reference&quot;,
+) -&gt; dict</code></pre>
+<p>Posts to <code>POST /api/calibration/transform</code>. Provide a <code>homography</code> or a <code>calibration</code> mapping.</p>
+<h3 id="inspect_point"><code>inspect_point</code></h3>
+<pre><code class="language-python">inspect_point(
+    point=None,
+    *,
+    x=None, y=None,
+    calibration=None,
+    grid=None,
+    source_dimensions=None,
+    spatial_state=None,
+) -&gt; dict</code></pre>
+<p>Posts to <code>POST /api/spatial/inspect-point</code>. Supply either <code>point</code> or both <code>x</code> and <code>y</code> (otherwise <code>SPEValidationError</code>). When <code>spatial_state</code> is given it is used directly; otherwise <code>calibration</code>/<code>grid</code>/<code>source_dimensions</code> are sent.</p>
+<h2 id="rendering">Rendering</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Method</th><th scope="col">Route</th></tr></thead><tbody><tr><td><code>generate_grid(image, *, filename=None, rows=8, columns=12, line_thickness=1, line_color=&quot;#a8f35b&quot;, show_coordinates=True, source_type=&quot;image&quot;, fps=None, frame_count=None)</code></td><td><code>POST /api/grid</code></td></tr><tr><td><code>generate_calibrated_grid(image, homography, *, filename=None, rows=4, columns=6, reference_width=1000, reference_height=600, source_points=None, show_grid=True, show_roi=True, line_color=&quot;#a8f35b&quot;, roi_color=&quot;#ff3b30&quot;, overlay_only=False)</code></td><td><code>POST /api/calibrated-grid</code></td></tr><tr><td><code>video_metadata(video, *, filename=None)</code></td><td><code>POST /api/video/metadata</code></td></tr></tbody></table></div>
+<p>The rendering methods return <code>{&quot;image&quot;: ..., &quot;metadata&quot;: {...}}</code>.</p>
+<h2 id="models">Models</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Method</th><th scope="col">Route</th><th scope="col">Returns</th></tr></thead><tbody><tr><td><code>list_models()</code></td><td><code>GET /api/models</code></td><td><code>response[&quot;models&quot;]</code>.</td></tr><tr><td><code>models()</code></td><td><code>GET /api/models</code></td><td>Typed <code>ModelDescriptor</code> objects.</td></tr><tr><td><code>get_model(model_id)</code></td><td><code>GET /api/models/{id}</code></td><td><code>response[&quot;model&quot;]</code>.</td></tr><tr><td><code>model_status(model_id)</code></td><td><code>GET /api/models/{id}/status</code></td><td>Raw payload.</td></tr><tr><td><code>load_model(model_id)</code></td><td><code>POST /api/models/{id}/load</code></td><td>Raw payload.</td></tr><tr><td><code>unload_model(model_id)</code></td><td><code>POST /api/models/{id}/unload</code></td><td>Raw payload.</td></tr><tr><td><code>model_classes(model_id)</code></td><td><code>GET /api/models/{id}/classes</code></td><td><code>response[&quot;classes&quot;]</code>.</td></tr></tbody></table></div>
+<h2 id="analysis">Analysis</h2>
+<h3 id="detect"><code>detect</code></h3>
+<pre><code class="language-python">detect(*, model_id=&quot;model-a&quot;, confidence=0.4, classes=None, source_id=None) -&gt; dict</code></pre>
+<p><code>POST /api/analysis/detect</code>.</p>
+<h3 id="detect_frame"><code>detect_frame</code></h3>
+<pre><code class="language-python">detect_frame(
+    frame,
+    *,
+    filename=&quot;frame.jpg&quot;,
+    model_id=&quot;model-a&quot;,
+    confidence=0.4,
+    classes=None,
+    analysis_id=&quot;analysis&quot;,
+    source_id=&quot;source&quot;,
+    timestamp=0.0,
+    frame_index=0,
+    tracking=False,
+    tracking_mode=None,
+    target_track_id=None,
+    target_detection=None,
+    inference_context=None,
+    spatial_context=None,
+    interval_ms=None,
+    effective_fps=None,
+) -&gt; dict</code></pre>
+<p><code>POST /api/analysis/detect-frame</code>. Detects and (optionally) tracks, spatializes, and timestamps a single frame.</p>
+<h3 id="session-methods">Session methods</h3>
+<div class="table-wrap"><table><thead><tr><th scope="col">Method</th><th scope="col">Route</th><th scope="col">Returns</th></tr></thead><tbody><tr><td><code>start_analysis_session(analysis_id, source_id, model, *, spatial_context=None)</code></td><td><code>POST /api/analysis/session/start</code></td><td><code>response[&quot;analysis&quot;]</code>.</td></tr><tr><td><code>update_analysis_status(analysis_id, status=&quot;running&quot;, *, inference_fps=None, interval_ms=None)</code></td><td><code>PATCH /api/analysis/session/status</code></td><td><code>response[&quot;analysis&quot;]</code>.</td></tr><tr><td><code>complete_analysis_session(analysis_id, status=&quot;complete&quot;)</code></td><td><code>POST /api/analysis/session/complete</code></td><td>Raw payload.</td></tr></tbody></table></div></div></section><section class="manual-section" data-search="asyncspeclient"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="asyncspeclient">AsyncSPEClient</h1></header><div class="markdown-body"><p><code>spe.aio.AsyncSPEClient</code> mirrors <code>SPEClient</code>. Every method is a coroutine; the synchronous client runs in a worker thread (<code>asyncio.to_thread</code>).</p>
+<pre><code class="language-python">import asyncio
+from spe import AsyncSPEClient
+
+
+async def main() -&gt; None:
+    async with AsyncSPEClient(&quot;http://127.0.0.1:5000&quot;) as client:
+        await client.health()
+
+
+asyncio.run(main())</code></pre>
+<p>Constructor arguments are forwarded verbatim to <code>SPEClient</code>. Additional members:</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Member</th><th scope="col">Description</th></tr></thead><tbody><tr><td><code>async __aenter__</code> / <code>__aexit__</code></td><td>Async context manager.</td></tr><tr><td><code>await aclose()</code></td><td>Close the underlying client.</td></tr><tr><td><code>AsyncSPEClient.from_env(variable=&quot;SPE_API_URL&quot;, **kwargs)</code></td><td>Build from an environment variable.</td></tr><tr><td><code>base_url</code> (property)</td><td>The underlying base URL.</td></tr></tbody></table></div>
+<p>Async methods (all coroutines; signatures match <code>SPEClient</code>):</p>
+<p><code>health</code>, <code>get_state</code>, <code>create_source</code>, <code>get_source</code>, <code>delete_source</code>, <code>source_media_url</code> (sync), <code>get_source_media</code>, <code>calibrate</code>, <code>get_calibration</code>, <code>update_calibration</code>, <code>delete_calibration</code>, <code>get_roi</code>, <code>create_roi</code>, <code>delete_roi</code>, <code>get_grid</code>, <code>set_grid</code>, <code>delete_grid</code>, <code>transform_points</code>, <code>inspect_point</code>, <code>generate_grid</code>, <code>generate_calibrated_grid</code>, <code>video_metadata</code>, <code>list_models</code>, <code>get_model</code>, <code>model_status</code>, <code>load_model</code>, <code>unload_model</code>, <code>model_classes</code>, <code>detect</code>, <code>detect_frame</code>, <code>start_analysis_session</code>, <code>update_analysis_status</code>, <code>complete_analysis_session</code>.</p></div></section><section class="manual-section" data-search="transports"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="transports">Transports</h1></header><div class="markdown-body"><p><code>spe.transport</code>. A transport performs exactly <strong>one</strong> request and never retries; retries, timeouts, and error mapping live in the client. Transport-level failures are raised as <code>SPEConnectionError</code> or <code>SPETimeoutError</code>.</p>
+<h2 id="transport-protocol"><code>Transport</code> (protocol)</h2>
+<pre><code class="language-python">class Transport(Protocol):
+    def request(
+        self,
+        method: str,
+        url: str,
+        *,
+        headers: Mapping[str, str],
+        data: bytes | None,
+        timeout: float,
+    ) -&gt; tuple[int, Mapping[str, str], bytes]: ...
+    def close(self) -&gt; None: ...</code></pre>
+<h2 id="backends">Backends</h2>
+<div class="table-wrap"><table><thead><tr><th scope="col">Class</th><th scope="col">Backing library</th><th scope="col">Notes</th></tr></thead><tbody><tr><td><code>UrllibTransport</code></td><td>standard library <code>urllib.request</code></td><td>Default; zero dependencies.</td></tr><tr><td><code>RequestsTransport</code></td><td><code>requests</code></td><td>Used when installed (not exported at package top level).</td></tr><tr><td><code>HttpxTransport</code></td><td><code>httpx</code></td><td>Preferred when installed (not exported at package top level).</td></tr></tbody></table></div>
+<h2 id="get_default_transport"><code>get_default_transport</code></h2>
+<pre><code class="language-python">get_default_transport(prefer: str | None = None) -&gt; Transport</code></pre>
+<p>With <code>prefer=None</code>, returns <code>HttpxTransport</code> if <code>httpx</code> is importable, then <code>RequestsTransport</code> if <code>requests</code> is importable, otherwise <code>UrllibTransport</code>. Pass <code>&quot;urllib&quot;</code>, <code>&quot;requests&quot;</code>, or <code>&quot;httpx&quot;</code> to force a backend; an unknown name raises <code>ValueError</code>.</p></div></section><section class="manual-section" data-search="exceptions"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="exceptions">Exceptions</h1></header><div class="markdown-body"><p>All errors derive from <code>SPEError</code>.</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Exception</th><th scope="col">Base classes</th><th scope="col">Meaning</th></tr></thead><tbody><tr><td><code>SPEError</code></td><td><code>Exception</code></td><td>Base class for every SDK error.</td></tr><tr><td><code>SPEValidationError</code></td><td><code>SPEError</code>, <code>ValueError</code></td><td>Invalid geometry or parameters.</td></tr><tr><td><code>SPEEngineError</code></td><td><code>SPEError</code>, <code>RuntimeError</code></td><td>Local processing cannot complete.</td></tr><tr><td><code>SPEModelUnavailableError</code></td><td><code>SPEEngineError</code></td><td>A model has no usable runtime.</td></tr><tr><td><code>SPETransportError</code></td><td><code>SPEError</code>, <code>RuntimeError</code></td><td>Base for transport failures.</td></tr><tr><td><code>SPEConnectionError</code></td><td><code>SPETransportError</code></td><td>The server cannot be reached.</td></tr><tr><td><code>SPETimeoutError</code></td><td><code>SPETransportError</code></td><td>A request exceeded its timeout.</td></tr><tr><td><code>SPEAPIError</code></td><td><code>SPEError</code></td><td>The server returned an error.</td></tr><tr><td><code>SPEBadRequestError</code></td><td><code>SPEAPIError</code></td><td>HTTP 400: invalid request payload.</td></tr><tr><td><code>SPEAuthenticationError</code></td><td><code>SPEAPIError</code></td><td>HTTP 401/403: missing or rejected credentials.</td></tr><tr><td><code>SPENotFoundError</code></td><td><code>SPEAPIError</code></td><td>HTTP 404: the resource does not exist.</td></tr><tr><td><code>SPEConflictError</code></td><td><code>SPEAPIError</code></td><td>HTTP 409: the server state rejected the request.</td></tr><tr><td><code>SPERateLimitError</code></td><td><code>SPEAPIError</code></td><td>HTTP 429: the client is being throttled.</td></tr><tr><td><code>SPEServerError</code></td><td><code>SPEAPIError</code></td><td>HTTP 5xx: a server-side failure.</td></tr></tbody></table></div>
+<p><code>SPEAPIError</code> exposes <code>status_code: int | None</code>, <code>payload: Any | None</code>, <code>url: str | None</code>, <code>retry_after: float | None</code>, and <code>response_headers: dict</code>. The status-specific subclasses keep <code>except SPEAPIError</code> handlers valid.</p></div></section></article><nav class="page-outline" id="page-outline" aria-label="On this page"><p>ON THIS PAGE</p></nav></div>
+      <footer class="docs-footer"><span>Spatial Intelligence Engine · Python SDK</span><span>Local core · HTTP clients · Temporal analytics</span></footer>
+    </main>
+  </div>
+  <script src="site.js" defer></script>
+</body>
+</html>

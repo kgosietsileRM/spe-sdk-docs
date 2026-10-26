@@ -1,0 +1,116 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Track detections over time, build observations, and compute spatial analytics.">
+  <title>Tracking &amp; analytics · SPE SDK Docs</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <header class="docs-topbar">
+    <a class="docs-brand" href="index.html" aria-label="SPE SDK docs home"><span class="docs-brand-mark">SPE</span><span><b>SDK Reference</b><small>Python · Spatial Intelligence Engine</small></span></a>
+    <div class="docs-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="docs-search" type="search" placeholder="Search this page…" aria-label="Search documentation"><kbd>/</kbd></div>
+    <a class="source-link" href="https://github.com/kgosietsileRM/spe_sdk" target="_blank" rel="noreferrer">Source <span>↗</span></a>
+  </header>
+  <div class="docs-layout">
+    <aside class="docs-sidebar"><div class="sidebar-label">DOCUMENTATION</div><nav aria-label="Documentation pages"><a class="nav-link" href="index.html"><span class="nav-icon">01</span><span>Overview</span></a>
+<a class="nav-link" href="local-spatial.html"><span class="nav-icon">02</span><span>Local spatial API</span></a>
+<a class="nav-link active" href="tracking-analytics.html"><span class="nav-icon">03</span><span>Tracking &amp; analytics</span></a>
+<a class="nav-link" href="http-clients.html"><span class="nav-icon">04</span><span>HTTP clients</span></a>
+<a class="nav-link" href="cli-development.html"><span class="nav-icon">05</span><span>CLI &amp; development</span></a></nav>
+      <div class="sidebar-bottom"><span>SDK VERSION</span><code>0.2.1</code><a href="index.md">Markdown reference ↗</a></div>
+    </aside>
+    <main class="docs-main">
+      <div class="docs-page-heading"><div class="breadcrumbs"><a href="index.html">Docs</a><span>/</span><span>Tracking &amp; analytics</span></div><div class="page-heading-row"><div><p>Track detections over time, build observations, and compute spatial analytics.</p><h1>Tracking &amp; analytics</h1></div><a class="edit-source" href="https://github.com/kgosietsileRM/spe_sdk/blob/main/docs/index.md" target="_blank" rel="noreferrer">Edit source ↗</a></div></div>
+      <div class="docs-search-status" id="docs-search-status" hidden></div>
+      <div class="docs-reading-layout"><article class="docs-content" id="docs-content"><section class="manual-section" data-search="tracking, motion and observations"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="tracking-motion-and-observations">Tracking, motion and observations</h1></header><div class="markdown-body"><p><code>spe.tracking</code>, <code>spe.motion</code>, and <code>spe.observations</code> mirror the engine&#x27;s temporal layer. They are pure and in-process: they operate on normalized detection mappings and never touch images or a server.</p>
+<h2 id="trackingconfig"><code>TrackingConfig</code></h2>
+<pre><code class="language-python">TrackingConfig(
+    min_iou: float = 0.01,
+    max_center_distance_scale: float = 2.5,
+    max_missing_seconds: float = 1.5,
+    confirmation_observations: int = 2,
+)</code></pre>
+<p>Association thresholds in source-pixel units and seconds.</p>
+<h2 id="modelagnostictracker"><code>ModelAgnosticTracker</code></h2>
+<pre><code class="language-python">ModelAgnosticTracker(config: TrackingConfig | None = None)
+tracker.update(detections, timestamp=None) -&gt; {&quot;detections&quot;: [...], &quot;diagnostics&quot;: {...}}
+tracker.snapshot() -&gt; dict
+tracker.reset() -&gt; None</code></pre>
+<p><code>update</code> assigns stable <code>track-&lt;n&gt;</code> ids to detections while rejecting duplicate and out-of-order timestamps without mutating state. Diagnostics include <code>active_tracks</code>, <code>tracks_created</code>, <code>tracks_terminated</code>, <code>matched_detections</code>, and related counters.</p>
+<h2 id="motionconfig"><code>MotionConfig</code></h2>
+<pre><code class="language-python">MotionConfig(
+    max_trajectory_samples: int = 32,
+    max_velocity_gap_seconds: float = 2.0,
+    prediction_horizon_seconds: float = 0.5,
+    max_prediction_horizon_seconds: float = 2.0,
+    max_prediction_age_seconds: float = 1.5,
+    max_tracks: int = 256,
+)</code></pre>
+<h2 id="spatialtrackstatemanager"><code>SpatialTrackStateManager</code></h2>
+<pre><code class="language-python">SpatialTrackStateManager(config: MotionConfig | None = None)
+manager.update(detections, timestamp, prediction_enabled=False) -&gt; dict
+manager.snapshot(timestamp=None, prediction_enabled=False) -&gt; dict
+manager.reset() -&gt; None</code></pre>
+<p>Prefers a valid detection <code>spatial.position</code> (keeping its coordinate system and units) and otherwise falls back to the bounding-box foot point in source pixels. Velocity is a finite difference over the last two samples; predictions are only produced when enabled and the track is fresh.</p>
+<h2 id="create_observation"><code>create_observation</code></h2>
+<pre><code class="language-python">create_observation(
+    detection_result,
+    *,
+    analysis_id: str,
+    source_id: str,
+    timestamp: float,
+    frame_index: int,
+) -&gt; dict</code></pre>
+<p>Builds a timestamped, provider-neutral observation without frame data, preserving calibrated <code>spatial</code> data and <code>track_id</code> when present. The SDK does not persist observations; store the returned dict however you prefer.</p>
+<h2 id="create_image_observation"><code>create_image_observation</code></h2>
+<pre><code class="language-python">create_image_observation(detection_result, *, source_id: str) -&gt; dict</code></pre>
+<p>Wraps one static-image detection result with source context.</p>
+<h2 id="observationbatchwriter"><code>ObservationBatchWriter</code></h2>
+<pre><code class="language-python">ObservationBatchWriter(
+    analysis_id: str,
+    source_id: str,
+    model: Mapping[str, Any],
+    *,
+    root: str | Path,
+    batch_size: int = 25,
+    interval_ms: float | None = None,
+    effective_fps: float | None = None,
+)
+writer.append(observation) -&gt; None
+writer.flush() -&gt; Path | None
+writer.update_sampling(interval_ms, effective_fps) -&gt; None
+writer.close(status=&quot;complete&quot;) -&gt; None</code></pre>
+<p>Opt-in persistence. Writes <code>root/&lt;analysis_id&gt;/observations.jsonl</code> and an adjacent <code>manifest.json</code>; nothing is written unless you instantiate the writer. It appends to an existing file so resumed runs keep prior records, and rejects path separators in identifiers.</p></div></section><section class="manual-section" data-search="inference contexts"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="inference-contexts">Inference contexts</h1></header><div class="markdown-body"><p><code>spe.inference</code> validates the source-space scope used by model providers.</p>
+<pre><code class="language-python">InferenceContext.whole_source() -&gt; InferenceContext
+InferenceContext.region_of_interest(points) -&gt; InferenceContext
+InferenceContext.from_dict(data) -&gt; InferenceContext
+context.to_dict() -&gt; dict
+resolve_inference_context(context, width, height) -&gt; dict</code></pre>
+<p><code>resolve_inference_context</code> accepts a mapping, an <code>InferenceContext</code>, or <code>None</code> and returns the engine-compatible dict. A ROI must be exactly four finite points inside the frame with non-degenerate area; otherwise <code>SPEValidationError</code> is raised.</p>
+<pre><code class="language-python">from spe import InferenceContext, resolve_inference_context
+
+context = InferenceContext.region_of_interest([[120, 80], [880, 110], [940, 520], [60, 540]])
+payload = resolve_inference_context(context, 1000, 600)
+client.detect_frame(frame, inference_context=payload)</code></pre></div></section><section class="manual-section" data-search="analytics"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="analytics">Analytics</h1></header><div class="markdown-body"><p><code>spe.analytics</code> builds summaries on top of tracked, spatialized detections. It is pure Python and accepts the engine&#x27;s JSON shapes.</p>
+<h2 id="zoneoccupancytracker"><code>ZoneOccupancyTracker</code></h2>
+<pre><code class="language-python">tracker.update(detections, timestamp=None) -&gt; dict
+tracker.snapshot() -&gt; dict
+tracker.reset() -&gt; None</code></pre>
+<p>Tracks per-zone occupancy, entry counts, and dwell seconds by <code>track_id</code> (falling back to <code>id</code>). Zones are read from <code>spatial.zone</code>, then <code>zone</code>.</p>
+<h2 id="linecrossingcounter"><code>LineCrossingCounter</code></h2>
+<pre><code class="language-python">LineCrossingCounter(start, end, *, name=&quot;line&quot;, max_events=1000)
+counter.update(detections) -&gt; dict
+counter.snapshot() -&gt; dict
+counter.reset() -&gt; None</code></pre>
+<p>Counts directional track crossings over a virtual line. Positions prefer <code>spatial.position</code>, then <code>position</code>, <code>foot_point</code>, <code>center</code>, or the bbox foot point. <code>positive</code> means a counter-clockwise transit; <code>negative</code> the reverse.</p>
+<h2 id="summarize_tracks"><code>summarize_tracks</code></h2>
+<pre><code class="language-python">summarize_tracks(frames, *, distance_units=&quot;source_pixels&quot;) -&gt; list[dict]</code></pre>
+<p>Consumes <code>{&quot;timestamp&quot;, &quot;detections&quot;}</code> frames and returns one <code>TrackSummary</code> per track with duration, frames, distance, average speed, visited zones, and start/end positions. All positions must share a coordinate space.</p></div></section></article><nav class="page-outline" id="page-outline" aria-label="On this page"><p>ON THIS PAGE</p></nav></div>
+      <footer class="docs-footer"><span>Spatial Intelligence Engine · Python SDK</span><span>Local core · HTTP clients · Temporal analytics</span></footer>
+    </main>
+  </div>
+  <script src="site.js" defer></script>
+</body>
+</html>

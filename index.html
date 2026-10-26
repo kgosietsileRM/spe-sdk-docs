@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Start with the SDK&#x27;s local spatial core, HTTP client, and temporal analytics.">
+  <title>SPE SDK documentation · SPE SDK Docs</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <header class="docs-topbar">
+    <a class="docs-brand" href="index.html" aria-label="SPE SDK docs home"><span class="docs-brand-mark">SPE</span><span><b>SDK Reference</b><small>Python · Spatial Intelligence Engine</small></span></a>
+    <div class="docs-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="docs-search" type="search" placeholder="Search this page…" aria-label="Search documentation"><kbd>/</kbd></div>
+    <a class="source-link" href="https://github.com/kgosietsileRM/spe_sdk" target="_blank" rel="noreferrer">Source <span>↗</span></a>
+  </header>
+  <div class="docs-layout">
+    <aside class="docs-sidebar"><div class="sidebar-label">DOCUMENTATION</div><nav aria-label="Documentation pages"><a class="nav-link active" href="index.html"><span class="nav-icon">01</span><span>Overview</span></a>
+<a class="nav-link" href="local-spatial.html"><span class="nav-icon">02</span><span>Local spatial API</span></a>
+<a class="nav-link" href="tracking-analytics.html"><span class="nav-icon">03</span><span>Tracking &amp; analytics</span></a>
+<a class="nav-link" href="http-clients.html"><span class="nav-icon">04</span><span>HTTP clients</span></a>
+<a class="nav-link" href="cli-development.html"><span class="nav-icon">05</span><span>CLI &amp; development</span></a></nav>
+      <div class="sidebar-bottom"><span>SDK VERSION</span><code>0.2.1</code><a href="index.md">Markdown reference ↗</a></div>
+    </aside>
+    <main class="docs-main">
+      <div class="docs-page-heading"><div class="breadcrumbs"><a href="index.html">Docs</a><span>/</span><span>Overview</span></div><div class="page-heading-row"><div><p>Start with the SDK&#x27;s local spatial core, HTTP client, and temporal analytics.</p><h1>SPE SDK documentation</h1></div><a class="edit-source" href="https://github.com/kgosietsileRM/spe_sdk/blob/main/docs/index.md" target="_blank" rel="noreferrer">Edit source ↗</a></div></div>
+      <div class="docs-search-status" id="docs-search-status" hidden></div>
+      <div class="docs-reading-layout"><article class="docs-content" id="docs-content"><section class="docs-welcome search-item">
+      <div class="welcome-copy"><span class="welcome-kicker">PYTHON SDK · SPATIAL INTELLIGENCE ENGINE</span>
+        <h1>Build spatial intelligence<br>into your vision workflow.</h1>
+        <p>Install <code>spe-engine</code>, import <code>spe</code>, and add calibration, tracking, and lane-aware spatial analytics to your vision workflow.</p>
+        <div class="install-command"><code>python -m pip install spe-engine</code><span>Python import: <code>spe</code></span></div>
+        <div class="welcome-actions"><a class="button-primary" href="local-spatial.html">Explore the local core</a><a class="button-secondary" href="http-clients.html">Connect to an engine</a></div>
+      </div>
+      <div class="welcome-visual" aria-label="Image coordinates mapped through calibration into a spatial grid">
+        <div class="visual-frame"><span class="frame-tag">IMAGE SPACE</span><i class="det-box box-one"></i><i class="det-box box-two"></i><i class="det-box box-three"></i><svg viewBox="0 0 400 210" aria-hidden="true"><path d="M70 24 334 38 374 186 30 178Z"/><path d="M70 24 30 178M202 31 203 180M334 38 374 186M54 101 354 108"/></svg><span class="visual-label">four-point calibration</span></div>
+        <div class="visual-arrow">→</div>
+        <div class="visual-grid"><span class="frame-tag">REFERENCE PLANE</span><div class="grid-cells"><i>A1</i><i>B1</i><i>C1</i><i>A2</i><i class="active">B2</i><i>C2</i><i>A3</i><i>B3</i><i>C3</i></div><span class="visual-label">track → cell → zone</span></div>
+      </div>
+    </section>
+    <section class="execution-surfaces search-item" aria-labelledby="surface-title">
+      <div class="surface-summary-head"><span class="card-kicker">HOW PROCESSING RUNS</span><h2 id="surface-title">Choose local computation or a remote engine.</h2><p>Both use the SPE spatial model; one runs inside your process, the other sends HTTP requests to a service.</p></div>
+      <div class="surface-options">
+        <article><span class="surface-label local-label">LOCAL · NO SERVER</span><h3><code>SpatialEngine</code></h3><p>Calibration, transforms, point inspection, grid rendering, and detection spatialization run in your Python process.</p><code class="surface-api">engine.spatialize_result(result)</code></article>
+        <article><span class="surface-label remote-label">REMOTE · HTTP</span><h3><code>SPEClient</code></h3><p>Each client method calls the configured SPE engine endpoint. The engine must already be running and reachable at <code>base_url</code>.</p><code class="surface-api">client.inspect_point(point, ...)</code></article>
+      </div>
+      <div class="surface-footnote"><b>Transport ≠ engine:</b> <code>spe-engine[http]</code> adds the optional <code>httpx</code> transport. It does not install or start the SPE server; the client also works with standard-library <code>urllib</code>.</div>
+    </section>
+    <section class="quickstart-grid" aria-label="Quick starts">
+      <article class="quickstart-card search-item"><span class="card-kicker">01 / LOCAL</span><h2>Spatialize in-process</h2><p>No server required for calibration, transforms, inspection, or rendering.</p>
+        <pre><code>from spe import SpatialEngine
+
+points = [[180, 120], [1090, 150], [1180, 640], [90, 660]]
+engine = SpatialEngine(grid_rows=4, grid_columns=6)
+engine.calibrate(points, 1280, 720)
+result = engine.inspect([640, 360])</code></pre>
+        <a href="local-spatial.html">Local spatial guide <span>→</span></a></article>
+      <article class="quickstart-card search-item"><span class="card-kicker">02 / HTTP</span><h2>Connect to SPE</h2><p>Use the typed sync client or its asyncio counterpart for server operations.</p>
+        <pre><code>from spe import SPEClient
+
+with SPEClient("http://127.0.0.1:5000") as client:
+    print(client.health())
+    print(client.list_models())</code></pre>
+        <a href="http-clients.html">HTTP client guide <span>→</span></a></article>
+      <article class="quickstart-card search-item"><span class="card-kicker">03 / TEMPORAL</span><h2>Track and measure</h2><p>Associate detections, maintain motion state, and summarize zone events.</p>
+        <pre><code>from spe import ModelAgnosticTracker
+
+tracker = ModelAgnosticTracker()
+tracked = tracker.update(detections, timestamp)
+print(tracked["diagnostics"])</code></pre>
+        <a href="tracking-analytics.html">Tracking &amp; analytics <span>→</span></a></article>
+    </section><section class="manual-section" data-search="installation"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="installation">Installation</h1></header><div class="markdown-body"><pre><code class="language-bash">pip install spe-engine             # published package
+pip install &quot;spe-engine[http]&quot;     # + optional httpx transport
+pip install &quot;spe-engine[docs]&quot;     # + documentation tooling
+
+# From a repository checkout:
+pip install -e &quot;.[dev]&quot;           # + pytest, pytest-cov, ruff, mypy, build, twine</code></pre>
+<p>Runtime dependencies are <code>numpy &gt;= 1.24</code> and <code>opencv-python-headless &gt;= 4.8</code>. The HTTP clients use only the standard library unless you opt into the <code>httpx</code> transport.</p>
+<p>Supported Python versions: <strong>3.10, 3.11, 3.12, 3.13, 3.14</strong>.</p></div></section><section class="manual-section" data-search="architecture"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="architecture">Architecture</h1></header><div class="markdown-body"><p>The SDK exposes two independent surfaces that share one coordinate contract:</p>
+<div class="table-wrap"><table><thead><tr><th scope="col">Module</th><th scope="col">Role</th></tr></thead><tbody><tr><td><code>spe.engine</code></td><td><code>SpatialEngine</code> — stateful, in-process facade.</td></tr><tr><td><code>spe.geometry</code></td><td>Homography math and four-point calibration (OpenCV/NumPy).</td></tr><tr><td><code>spe.spatial</code></td><td>Point inspection and detection spatialization primitives.</td></tr><tr><td><code>spe.grid</code></td><td>Image-space and calibrated grid rendering.</td></tr><tr><td><code>spe.zones</code></td><td>Deterministic semantic zone identifiers.</td></tr><tr><td><code>spe.tracking</code></td><td>Provider-neutral multi-object association (<code>ModelAgnosticTracker</code>).</td></tr><tr><td><code>spe.motion</code></td><td>Bounded trajectories, velocity, direction, and prediction.</td></tr><tr><td><code>spe.observations</code></td><td>Provider-neutral timestamped observation builders.</td></tr><tr><td><code>spe.models</code></td><td>Typed value objects over the JSON contracts.</td></tr><tr><td><code>spe.client</code></td><td><code>SPEClient</code> — synchronous HTTP client for a running engine.</td></tr><tr><td><code>spe.aio</code></td><td><code>AsyncSPEClient</code> — asyncio wrapper around <code>SPEClient</code>.</td></tr><tr><td><code>spe.transport</code></td><td>Pluggable HTTP transports (<code>urllib</code>, <code>requests</code>, <code>httpx</code>).</td></tr><tr><td><code>spe.exceptions</code></td><td>The <code>SPEError</code> hierarchy.</td></tr><tr><td><code>spe.cli</code></td><td>The <code>spe</code> command-line interface.</td></tr></tbody></table></div>
+<p>The <strong>local core</strong> (<code>SpatialEngine</code> plus the free functions) performs all geometry in-process and never needs a server. The <strong>HTTP client</strong> speaks to a running SPE engine server and mirrors the same spatial model.</p></div></section><section class="manual-section" data-search="type aliases and version"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="type-aliases-and-version">Type aliases and version</h1></header><div class="markdown-body"><ul><li><code>spe.__version__</code> — the installed SDK version string (also printed by <code>spe --version</code>).</li><li><code>FileSource</code> — the accepted input type for uploads: <code>bytes | bytearray | memoryview | str | os.PathLike | BinaryIO</code>. A <code>str</code> or <code>os.PathLike</code> is read from disk; bytes-like values are sent as-is; any object with a callable <code>read</code> is read as a binary stream.</li></ul></div></section><section class="manual-section" data-search="coordinate contract"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="coordinate-contract">Coordinate contract</h1></header><div class="markdown-body"><p>Three coordinate systems are kept distinct:</p>
+<ol><li><strong>Image coordinates</strong> — source pixels, <code>(x, y)</code>, origin at the top-left. Exposed with <code>coordinate_system: &quot;image_pixels&quot;</code> (or <code>&quot;source_pixels&quot;</code> for model detections).</li><li><strong>Reference coordinates</strong> — the calibrated plane, default <code>1000 x 600</code>, <code>units: &quot;normalized&quot;</code>. Exposed with <code>coordinate_system: &quot;calibrated_reference_plane&quot;</code>. Physical units are only reported when the calibration was created with non-<code>normalized</code> <code>units</code>; the SDK never invents a physical scale.</li><li><strong>Grid coordinates</strong> — logical cells over the reference plane, plus semantic zones.</li></ol>
+<p>Calibration uses exactly four points in <strong><code>TL, TR, BR, BL</code></strong> order — <code>top_left, top_right, bottom_right, bottom_left</code>. Points must form a non-degenerate, non-self-intersecting quadrilateral inside the source frame.</p>
+<p>A four-point calibration computes a <code>3 x 3</code> homography mapping image → reference (<code>homography</code>) and its inverse reference → image (<code>inverse_homography</code>).</p>
+<p><strong>Grid cells</strong> are zero-based <code>row</code>/<code>column</code> indices, exposed both as a <code>GridCell</code> and as a <code>coordinate</code> list in <code>(column, row)</code> order. <strong>Zones</strong> are human-readable ids built from a spreadsheet-style row label and a one-based column: <code>A1</code>, <code>B3</code>, <code>AA2</code>, ...</p></div></section></article><nav class="page-outline" id="page-outline" aria-label="On this page"><p>ON THIS PAGE</p></nav></div>
+      <footer class="docs-footer"><span>Spatial Intelligence Engine · Python SDK</span><span>Local core · HTTP clients · Temporal analytics</span></footer>
+    </main>
+  </div>
+  <script src="site.js" defer></script>
+</body>
+</html>

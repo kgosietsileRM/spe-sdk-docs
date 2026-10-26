@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark">
+  <meta name="description" content="Use the spe command line, run the examples, and develop the SDK.">
+  <title>CLI &amp; development · SPE SDK Docs</title>
+  <link rel="stylesheet" href="site.css">
+</head>
+<body>
+  <header class="docs-topbar">
+    <a class="docs-brand" href="index.html" aria-label="SPE SDK docs home"><span class="docs-brand-mark">SPE</span><span><b>SDK Reference</b><small>Python · Spatial Intelligence Engine</small></span></a>
+    <div class="docs-search"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg><input id="docs-search" type="search" placeholder="Search this page…" aria-label="Search documentation"><kbd>/</kbd></div>
+    <a class="source-link" href="https://github.com/kgosietsileRM/spe_sdk" target="_blank" rel="noreferrer">Source <span>↗</span></a>
+  </header>
+  <div class="docs-layout">
+    <aside class="docs-sidebar"><div class="sidebar-label">DOCUMENTATION</div><nav aria-label="Documentation pages"><a class="nav-link" href="index.html"><span class="nav-icon">01</span><span>Overview</span></a>
+<a class="nav-link" href="local-spatial.html"><span class="nav-icon">02</span><span>Local spatial API</span></a>
+<a class="nav-link" href="tracking-analytics.html"><span class="nav-icon">03</span><span>Tracking &amp; analytics</span></a>
+<a class="nav-link" href="http-clients.html"><span class="nav-icon">04</span><span>HTTP clients</span></a>
+<a class="nav-link active" href="cli-development.html"><span class="nav-icon">05</span><span>CLI &amp; development</span></a></nav>
+      <div class="sidebar-bottom"><span>SDK VERSION</span><code>0.2.1</code><a href="index.md">Markdown reference ↗</a></div>
+    </aside>
+    <main class="docs-main">
+      <div class="docs-page-heading"><div class="breadcrumbs"><a href="index.html">Docs</a><span>/</span><span>CLI &amp; development</span></div><div class="page-heading-row"><div><p>Use the spe command line, run the examples, and develop the SDK.</p><h1>CLI &amp; development</h1></div><a class="edit-source" href="https://github.com/kgosietsileRM/spe_sdk/blob/main/docs/index.md" target="_blank" rel="noreferrer">Edit source ↗</a></div></div>
+      <div class="docs-search-status" id="docs-search-status" hidden></div>
+      <div class="docs-reading-layout"><article class="docs-content" id="docs-content"><section class="manual-section" data-search="command line"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="command-line">Command line</h1></header><div class="markdown-body"><p>Installed as the <code>spe</code> console script; also runnable as <code>python -m spe</code>.</p>
+<pre><code class="language-text">spe [--url URL] [--api-key KEY] [--timeout SECONDS] [--compact] [--version]
+    {health,state,models,inspect,calibrate,spatialize,track,render-grid} ...</code></pre>
+<div class="table-wrap"><table><thead><tr><th scope="col">Command</th><th scope="col">Description</th><th scope="col">Options</th></tr></thead><tbody><tr><td><code>health</code></td><td>Check server health.</td><td>—</td></tr><tr><td><code>state</code></td><td>Fetch the master spatial state.</td><td>—</td></tr><tr><td><code>models</code></td><td>List registered perception models.</td><td><code>--descriptors</code> (typed output)</td></tr><tr><td><code>inspect</code></td><td>Inspect a point against a calibration file.</td><td><code>--x FLOAT</code>, <code>--y FLOAT</code>, <code>--calibration PATH</code>, <code>--size WxH</code> (default <code>1000x600</code>), <code>--rows INT</code> (3), <code>--columns INT</code> (3)</td></tr><tr><td><code>calibrate</code></td><td>Calculate a calibration from four points.</td><td><code>--size WxH</code> (required), <code>--points X,Y X,Y X,Y X,Y</code> (required), <code>--rows INT</code> (3), <code>--columns INT</code> (3), <code>--reference WxH</code> (<code>1000x600</code>), <code>--units STR</code> (<code>normalized</code>)</td></tr><tr><td><code>spatialize</code></td><td>Add spatial data to detections JSON.</td><td><code>--calibration PATH</code> (required), <code>--detections PATH</code> (required), <code>--rows INT</code>, <code>--columns INT</code></td></tr><tr><td><code>track</code></td><td>Track a JSON list of frames.</td><td><code>--frames PATH</code> (required), <code>--min-iou FLOAT</code>, <code>--max-distance-scale FLOAT</code>, <code>--max-missing FLOAT</code>, <code>--confirmation INT</code></td></tr><tr><td><code>render-grid</code></td><td>Draw a grid onto an image.</td><td><code>--image PATH</code> (required), <code>--output PATH</code> (required), <code>--calibration PATH</code>, <code>--rows INT</code> (8), <code>--columns INT</code> (12), <code>--thickness INT</code> (1)</td></tr></tbody></table></div>
+<p>Global options: <code>--url</code> (default <code>http://127.0.0.1:5000</code>), <code>--api-key</code>, <code>--timeout</code> (30 seconds), <code>--compact</code> (compact JSON), and <code>--version</code> (prints <code>spe-engine &lt;version&gt;</code>). Points may be written with either commas or semicolons. Errors print <code>error: ...</code> to stderr and return exit code <code>1</code>.</p>
+<pre><code class="language-bash">spe --url http://127.0.0.1:5000 health
+spe state
+spe calibrate --size 1280x720 --points 180,120 1090,150 1180,640 90,660 --rows 4 --columns 6
+spe inspect --x 640 --y 360 --calibration calibration.json --size 1280x720
+spe spatialize --calibration calibration.json --detections frames.json
+spe track --frames frames.json
+spe render-grid --image frame.jpg --output annotated.png --rows 4 --columns 6
+spe --version</code></pre></div></section><section class="manual-section" data-search="stand-alone demos"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="stand-alone-demos">Stand-alone demos</h1></header><div class="markdown-body"><p>Four runnable applications live under <code>examples/</code> and install the built wheel from <code>examples/assets</code> into their own virtual environments. They never import from <code>src/</code>, which makes them practical proof that the package works as a normal dependency.</p>
+<ul><li><code>examples/cli</code> — interactive media shell with lane analytics and overlays.</li><li><code>examples/powershell</code> — PowerShell bootstrap around a <code>.bat</code> batch analyzer.</li><li><code>examples/template</code> — Flask studio with spatial presets and Jinja JSON output.</li><li><code>examples/web</code> — FlowTraffic OPS camera wall with selected-feed analytics, lane telemetry, incident logging, response advisories, and replay.</li></ul>
+<p>See each folder&#x27;s <code>README.md</code> for setup, commands, and output locations.</p></div></section><section class="manual-section" data-search="development"><header class="manual-section-head"><span>SDK REFERENCE</span><h1 id="development">Development</h1></header><div class="markdown-body"><pre><code class="language-bash">pip install -e &quot;.[dev]&quot;
+
+ruff check .            # lint
+ruff format --check .   # formatting
+mypy                    # static types
+pytest --cov=spe        # tests + coverage</code></pre>
+<ul><li><strong>Lint/format</strong>: ruff (config in <code>pyproject.toml</code>).</li><li><strong>Types</strong>: mypy in strict-ish mode; all public functions are fully annotated.</li><li><strong>Tests</strong>: pytest with branch coverage held at ~99% (CI gate: 90%).</li><li><strong>Packaging</strong>: <code>python -m build</code> produces an sdist and wheel; <code>twine check</code> validates the metadata.</li></ul>
+<p>Pre-commit hooks are provided (<code>pre-commit install</code>). See <a href="https://github.com/kgosietsileRM/spe_sdk/blob/main/CONTRIBUTING.md" target="_blank" rel="noreferrer"><code>CONTRIBUTING.md</code></a> for conventions and the release process, and <a href="https://github.com/kgosietsileRM/spe_sdk/blob/main/CHANGELOG.md" target="_blank" rel="noreferrer"><code>CHANGELOG.md</code></a> for version history.</p></div></section></article><nav class="page-outline" id="page-outline" aria-label="On this page"><p>ON THIS PAGE</p></nav></div>
+      <footer class="docs-footer"><span>Spatial Intelligence Engine · Python SDK</span><span>Local core · HTTP clients · Temporal analytics</span></footer>
+    </main>
+  </div>
+  <script src="site.js" defer></script>
+</body>
+</html>
